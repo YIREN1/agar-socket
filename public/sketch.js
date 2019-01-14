@@ -3,10 +3,14 @@ let blob;
 let blobs = [];
 let zoom = 1;
 
+function deleteById() {
+
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   socket = io.connect();
-  blob = new Blob(random(width), random(height), 32);
+  blob = new Blob(socket.id, random(width), random(height), random(10,25));
   const data = {
     x: blob.pos.x,
     y: blob.pos.y,
@@ -16,9 +20,14 @@ function setup() {
   socket.emit('start', data);
 
   socket.on('heartbeat', (data) => {
-    console.log(data);
-    blobs = data;
-
+    const newBlobs = [];
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (data[i].id !== socket.id) {
+        newBlobs.push(new Blob(data[i].id, data[i].x, data[i].y, data[i].r, true));
+      }
+    }  
+    blobs = newBlobs;  
+    console.log(blobs);
   });
   // for (var i = 0; i < 200; i++) {
   //   var x = random(-2 * width, 2 * width);
@@ -30,15 +39,16 @@ function setup() {
 function draw() {
   background(243, 251, 255);
   translate(width / 2, height / 2);
-  const newzoom = 64 / blob.r;
+  const newzoom = 32 / blob.r;
   zoom = lerp(zoom, newzoom, 0.1);
   scale(zoom);
   translate(-blob.pos.x, -blob.pos.y);
   blob.show();
+
   if (mouseIsPressed) {
     blob.update();
   }
-  
+
   blob.constrain();
   const data = {
     x: blob.pos.x,
@@ -50,18 +60,21 @@ function draw() {
 
   for (var i = blobs.length - 1; i >= 0; i--) {
     if (blobs[i].id !== socket.id) {
-      fill(75, 105, 200);
-      stroke(255, 204, 0);
-      strokeWeight(4);
-      
-      ellipse(blobs[i].x, blobs[i].y, blobs[i].r * 2, blobs[i].r * 2);
-      fill(255);
-      textAlign(CENTER);
-      textSize(4);
-      text(blobs[i].id, blobs[i].x, blobs[i].y + blobs[i].r);
-      // if (blob.eats(blobs[i])) {
-      //   blobs.splice(i, 1);
-      // }
+      blobs[i].show();
+      if (blob.touch(blobs[i])) {
+        // blobs.splice(i, 1);
+        if (blob.r > blobs[i].r) {
+          blob.grow(blobs[i]);
+          blobs[i].die();
+          blobs.splice(i, 1);
+          location.reload();
+        } else {
+          blob.die();
+          blobs[i].grow(blob);
+          const data = {id: blob.id};
+          socket.emit('die', data);
+        }
+      }
     }
 
   }

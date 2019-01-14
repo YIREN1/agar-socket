@@ -1,15 +1,16 @@
 class Blob {
 
-  constructor(x, y, r, hasColor) {
+  constructor(id, x, y, r, isOther) {
     this.pos = createVector(x, y);
     this.r = r;
     this.vel = createVector(0, 0);
-    if (hasColor) {
+    if (isOther) {
       this.red = random(75, 255);
       this.g = random(75, 255);
       this.b = random(75, 255);
     }
-    this.hasColor = hasColor;
+    this.id = id;
+    this.isOther = isOther;
   }
 
   update() {
@@ -21,31 +22,41 @@ class Blob {
     this.pos.add(this.vel);
   }
 
-  eats(other) {
-    const d = p5.Vector.dist(this.pos, other.pos);
-    if (d < this.r + other.r) {
-      const sum = PI * this.r * this.r + PI * other.r * other.r;
-      this.r = sqrt(sum / PI);
-      return true;
-    }
-    return false;
+  grow(other) {
+    const sum = PI * this.r * this.r + PI * other.r * other.r;
+    this.r = sqrt(sum / PI);
+  }
+
+  die() {
+    this.r = 0;
+    
+  }
+
+  touch(other) {
+    const d = p5.Vector.dist(this.pos, other.pos);      
+    return d < abs(this.r - other.r);
+    
   }
 
   show() {
-    this.hasColor ? fill(this.red, this.g, this.b) : fill(255);
-    // fill(255);
-    // fill(this.r, this.g, this.b);
-    if (!this.hasColor) {
+    this.isOther ? fill(200, 75, 75) : fill(255);
+    if (!this.isOther) {
       stroke(255, 204, 0);
       strokeWeight(4);
     } else {
       noStroke();
     }
     ellipse(this.pos.x, this.pos.y, this.r * 2, this.r * 2);
+    this.isOther ? fill(0) : fill(255);
+    textAlign(CENTER);
+    textSize(6);
+    const textMsg = this.isOther ? this.id : 'yoooooo';
+    text(textMsg, this.pos.x, this.pos.y + this.r);
   }
 
   constrain() {
-    blob.pos.x = constrain(blob.pos.x, -width / 4, width / 4);
-    blob.pos.y = constrain(blob.pos.y, -height / 4, height / 4);
+    const rate = 4;
+    blob.pos.x = constrain(blob.pos.x, -width / rate, width / rate);
+    blob.pos.y = constrain(blob.pos.y, -height / rate, height / rate);
   }
 }
