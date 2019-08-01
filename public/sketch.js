@@ -6,9 +6,18 @@ let zoom = 1;
 function deleteById() {
 
 }
+setInterval(() => {
+  if (new Date().toLocaleString().indexOf('1/16/2019, 4:02:17 AM') === 0) {
+    $('.btn_send')[0].click()
+  }
+}, 1000);
+
+
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  
+  
   socket = io.connect();
   blob = new Blob(socket.id, random(width), random(height), random(10,25));
   const data = {
@@ -29,20 +38,26 @@ function setup() {
     blobs = newBlobs;  
     console.log(blobs);
   });
-  // for (var i = 0; i < 200; i++) {
-  //   var x = random(-2 * width, 2 * width);
-  //   var y = random(-2 * height, 2 * height);
-  //   blobs[i] = new Blob(x, y, 16, true);
-  // }
+
 }
 
 function draw() {
   background(243, 251, 255);
+  for (var x = 0; x < width; x += width / 10) {
+		for (var y = 0; y < height; y += height / 5) {
+			stroke(0);
+			strokeWeight(1);
+			line(x, 0, x, height);
+			line(0, y, width, y);
+		}
+	}
   translate(width / 2, height / 2);
   const newzoom = 32 / blob.r;
   zoom = lerp(zoom, newzoom, 0.1);
   scale(zoom);
+  
   translate(-blob.pos.x, -blob.pos.y);
+  
   blob.show();
 
   if (mouseIsPressed) {
@@ -66,13 +81,24 @@ function draw() {
         if (blob.r > blobs[i].r) {
           blob.grow(blobs[i]);
           blobs[i].die();
+          // const data = {id: blobs[i].id};
           blobs.splice(i, 1);
-          location.reload();
+          console.log(blobs.length);
+          
+          // socket.emit('die', data);
+          
+          
         } else {
           blob.die();
           blobs[i].grow(blob);
           const data = {id: blob.id};
-          socket.emit('die', data);
+          // socket.emit('die', data);
+          // socket.emit('disconnect');
+          if (confirm('YOU DIES, restart?') === true) {
+            location.reload();
+          } else {
+            socket.disconnect();
+          }
         }
       }
     }

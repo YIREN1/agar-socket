@@ -32,6 +32,7 @@ class Blob {
     
   }
 
+  
   touch(other) {
     const d = p5.Vector.dist(this.pos, other.pos);      
     return d < abs(this.r - other.r);
@@ -50,7 +51,7 @@ class Blob {
     this.isOther ? fill(0) : fill(255);
     textAlign(CENTER);
     textSize(6);
-    const textMsg = this.isOther ? this.id : 'yoooooo';
+    const textMsg = this.isOther ? this.id.substring(0,3) : 'yoooooo';
     text(textMsg, this.pos.x, this.pos.y + this.r);
   }
 

@@ -18,15 +18,19 @@ const io = socket(server);
 
 const clients = [];
 const food = [];
+const height = 665;
+const width = 1280;
 
-class Client {
-  constructor(id, x, y, r) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.r = r;
-  }
+function generateFood() {
+  var x = Math.random(-2 * width, 2 * width);
+  var y = Math.random(-2 * height, 2 * height);
+  return {x: x, y: y};
 }
+(function initFood() {
+  for (var i = 0; i < 200; i++) {
+    food[i] = generateFood();
+  }
+})();
 
 setInterval(() => {
   io.sockets.emit('heartbeat', clients);
@@ -35,22 +39,25 @@ setInterval(() => {
 io.sockets.on('connection', (socket) => {
   console.log('Notice! New one!' + socket.id);
 
-  socket.on('mouse', (data) => {
-    // console.log(data);
-    socket.broadcast.emit('mouse', data);
-    //io.sockets.emit('mouse', data);
-  });
+  // socket.on('mouse', (data) => {
+  //   // console.log(data);
+  //   socket.broadcast.emit('mouse', data);
+  //   //io.sockets.emit('mouse', data);
+  // });
 
   socket.on('start', (data) => {
-    // console.log(socket.id + " " + data.x + " " + data.y + " " + data.r);
-    // socket.broadcast.emit('mouse', data);
-    const client = new Client(socket.id, data.x, data.y, data.r);
+    const client = {
+      id: socket.id, 
+      x: data.x, 
+      y: data.y, 
+      r: data.r
+    };
     clients.push(client);
     //io.sockets.emit('mouse', data);
   });
 
   socket.on('update',
-    function (data) {
+     (data) => {
       // console.log(socket.id + " " + data.x + " " + data.y + " " + data.r);
       let client;
       for (let i = 0; i < clients.length; i++) {
@@ -72,6 +79,9 @@ io.sockets.on('connection', (socket) => {
       }
     }
     clients.splice(i, 1);
+    socket.disconnect();
+    console.log(socket.id+ ' DIES');
+    
   });
 
   socket.on('disconnect', function() {
